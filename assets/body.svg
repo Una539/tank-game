@@ -1,0 +1,5 @@
+<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg">
+  <rect x="-45" y="-40" width="90" height="15" rx="5" fill="#333333" class="treads"/>
+  <rect x="-45" y="25" width="90" height="15" rx="5" fill="#333333" class="treads"/>
+  <rect x="-30" y="-30" width="60" height="60" rx="10" fill="#4F6B38" class="main-fill" stroke="#000000" stroke-width="4"/>
+</svg>
