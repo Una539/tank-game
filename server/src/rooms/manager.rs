@@ -1,3 +1,19 @@
+// Tank Game — 坦克大战
+// Copyright (C) 2026
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 //! Room manager
 //! 本模块是多人游戏房间系统的核心，管理房间的创建、加入、准备、启动和游戏循环。
 //! 与前端 `src/Lobby.tsx` + `src/network/client.ts` 共同构成完整的大厅/房间流程。

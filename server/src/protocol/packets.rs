@@ -1,3 +1,19 @@
+// Tank Game — 坦克大战
+// Copyright (C) 2026
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 //! Packet definitions using Postcard serialization
 //! 本模块定义了前后端通信的所有协议包结构。
 //! 原计划使用 Postcard 二进制序列化（见 Cargo.toml 依赖），但目前实际使用 serde_json。

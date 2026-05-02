@@ -1,3 +1,19 @@
+// Tank Game — 坦克大战
+// Copyright (C) 2026
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 //! Game state management
 //! 本模块是权威服务器（Authoritative Server）的核心，管理所有玩家的状态、子弹、爆炸和游戏进程。
 //! 与前端 `src/Games/Game.tsx` 中的游戏循环对应，但前端只做本地预测和渲染，本模块拥有最终裁决权。
