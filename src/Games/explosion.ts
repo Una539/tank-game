@@ -1,10 +1,27 @@
 import { Container, Graphics } from 'pixi.js';
 
+/**
+ * 爆炸效果实体类，继承自 PIXI.Container。
+ * 用于坦克被击中时的视觉效果。
+ * 与后端 `server/src/game/explosion.rs` 的 `Explosion` 结构体保持逻辑一致，
+ * 确保前后端爆炸动画的进度同步。
+ */
 class Explosion extends Container {
+  /** 已过去的动画时间（毫秒）。 */
   private elapsed: number = 0;
-  private duration: number = 500; // 动画持续毫秒
+
+  /** 动画总持续时间（毫秒）。500ms = 0.5秒，是爆炸效果的舒适时长：足够明显又不会拖沓。 */
+  private duration: number = 500;
+
+  /** 爆炸是否仍然活跃。false 时将在下一帧被清理。 */
   active: boolean = true;
 
+  /**
+   * 创建爆炸实例。
+   *
+   * @param x - 爆炸中心 X 坐标（通常为被击中坦克的位置）
+   * @param y - 爆炸中心 Y 坐标
+   */
   constructor(x: number, y: number) {
     super();
     this.x = x;
@@ -12,6 +29,13 @@ class Explosion extends Container {
     this.drawFrame(0);
   }
 
+  /**
+   * 绘制指定进度的爆炸帧。
+   * 使用两层同心圆：外圈橙色（火焰）+ 内圈黄色（亮心），营造爆炸的层次感。
+   * 为什么用 Graphics 而非 Sprite：爆炸是动态变化的形状，代码绘制比预渲染动画更灵活且省资源。
+   *
+   * @param progress - 动画进度 [0, 1]
+   */
   private drawFrame(progress: number) {
     this.removeChildren();
     const maxRadius = 40;
@@ -30,6 +54,14 @@ class Explosion extends Container {
     this.addChild(outer, inner);
   }
 
+  /**
+   * 更新爆炸动画。
+   * 每帧调用，根据经过的时间更新进度并重绘。
+   * 与后端 `server/src/game/explosion.rs` 的 `update` 方法对应，
+   * 但后端使用固定 33ms delta，前端使用实际帧间隔（更平滑）。
+   *
+   * @param delta - 本帧经过的时间（毫秒）
+   */
   update(delta: number) {
     if (!this.active) return;
     this.elapsed += delta;
