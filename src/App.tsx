@@ -1,5 +1,5 @@
 // Tank Game — 坦克大战
-// Copyright (C) 2026
+// Copyright (C) 2026 Una
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -86,10 +86,14 @@ const App = () => {
     setMode('lobby');
 
     // 异步连接服务器。catch 处理连接失败（如服务器未启动）。
-    client().connect().catch((e) => {
-      console.error('Failed to connect to server:', e);
-      alert('Failed to connect to server. Make sure the server is running on port 8080.');
-    });
+    client()
+      .connect()
+      .catch((e) => {
+        console.error('Failed to connect to server:', e);
+        alert(
+          'Failed to connect to server. Make sure the server is running on port 8080.'
+        );
+      });
   };
 
   /**
@@ -146,7 +150,11 @@ const App = () => {
           mode={gameMode()}
           client={gameMode() === 'multiplayer' ? client() : undefined}
           serverWalls={gameMode() === 'multiplayer' ? serverWalls() : undefined}
-          playerId={gameMode() === 'multiplayer' ? client().playerId || undefined : undefined}
+          playerId={
+            gameMode() === 'multiplayer'
+              ? client().playerId || undefined
+              : undefined
+          }
           onGameOver={handleGameOver}
         />
       </Show>

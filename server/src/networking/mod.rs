@@ -1,5 +1,5 @@
 // Tank Game — 坦克大战
-// Copyright (C) 2026
+// Copyright (C) 2026 Una
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -22,9 +22,9 @@
 //! - heartbeat：心跳管理（延迟测量、超时检测）
 //! - broadcast：广播通道管理（房间消息群发）
 
-pub mod heartbeat;
 pub mod broadcast;
+pub mod heartbeat;
 
 // 重导出常用类型。
-pub use heartbeat::*;
 pub use broadcast::*;
+pub use heartbeat::*;

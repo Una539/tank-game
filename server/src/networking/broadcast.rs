@@ -1,5 +1,5 @@
 // Tank Game — 坦克大战
-// Copyright (C) 2026
+// Copyright (C) 2026 Una
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -157,10 +157,17 @@ impl GameChannel {
 #[derive(Debug, Clone)]
 pub enum InputEvent {
     /// 玩家按键输入。
-    Input { player_id: uuid::Uuid, keys: crate::protocol::KeyState, timestamp: u64 },
+    Input {
+        player_id: uuid::Uuid,
+        keys: crate::protocol::KeyState,
+        timestamp: u64,
+    },
 
     /// 玩家开火请求。
-    Fire { player_id: uuid::Uuid, timestamp: u64 },
+    Fire {
+        player_id: uuid::Uuid,
+        timestamp: u64,
+    },
 }
 
 /**

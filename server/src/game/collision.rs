@@ -1,5 +1,5 @@
 // Tank Game — 坦克大战
-// Copyright (C) 2026
+// Copyright (C) 2026 Una
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -34,11 +34,7 @@ use super::map::WallSegment;
  */
 pub fn check_collision(nx: f64, ny: f64, radius: f64, walls: &[WallSegment]) -> bool {
     for wall in walls {
-        let dist = point_to_segment_distance(
-            nx, ny,
-            wall.x1, wall.y1,
-            wall.x2, wall.y2,
-        );
+        let dist = point_to_segment_distance(nx, ny, wall.x1, wall.y1, wall.x2, wall.y2);
         if dist < radius {
             return true;
         }
@@ -63,11 +59,7 @@ pub fn check_collision(nx: f64, ny: f64, radius: f64, walls: &[WallSegment]) -> 
  * @param y2 - 线段终点 Y
  * @returns 点到线段的最短距离
  */
-fn point_to_segment_distance(
-    px: f64, py: f64,
-    x1: f64, y1: f64,
-    x2: f64, y2: f64,
-) -> f64 {
+fn point_to_segment_distance(px: f64, py: f64, x1: f64, y1: f64, x2: f64, y2: f64) -> f64 {
     let l2 = (x2 - x1).powi(2) + (y2 - y1).powi(2);
     if l2 == 0.0 {
         return ((px - x1).powi(2) + (py - y1).powi(2)).sqrt();
@@ -88,8 +80,10 @@ mod tests {
     #[test]
     fn test_collision() {
         let walls = vec![super::WallSegment {
-            x1: 0.0, y1: 0.0,
-            x2: 100.0, y2: 0.0,
+            x1: 0.0,
+            y1: 0.0,
+            x2: 100.0,
+            y2: 0.0,
             wall_type: super::super::WallType::Horizontal,
         }];
 

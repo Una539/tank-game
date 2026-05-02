@@ -1,5 +1,5 @@
 // Tank Game — 坦克大战
-// Copyright (C) 2026
+// Copyright (C) 2026 Una
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -19,7 +19,7 @@
 //! 原计划使用 Postcard 二进制序列化（见 Cargo.toml 依赖），但目前实际使用 serde_json。
 //! 与前端 `src/network/types.ts` 保持语义一致。
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::protocol::error::ErrorCode;
@@ -38,11 +38,18 @@ pub const PROTOCOL_VERSION: u16 = 1;
 #[serde(tag = "type")]
 pub enum ClientPacket {
     /// 加入房间请求。发送后服务器返回 Welcome + RoomUpdate。
-    Join { room_id: String, player_name: String },
+    Join {
+        room_id: String,
+        player_name: String,
+    },
 
     /// 玩家输入状态。每帧（或每 tick）发送，包含当前按键状态。
     /// tick 字段用于服务器对齐客户端输入时序。
-    Input { tick: u32, keys: KeyState, timestamp: u64 },
+    Input {
+        tick: u32,
+        keys: KeyState,
+        timestamp: u64,
+    },
 
     /// 开火请求。与 Input 分离：开火是一次性事件而非持续状态，
     /// 需要独立包类型以便服务器精确处理时机。
@@ -100,7 +107,11 @@ pub enum ServerPacket {
     RoomUpdate { players: Vec<RoomPlayer> },
 
     /// 游戏开始通知。所有玩家 ready 后广播，包含地图种子和地图数据。
-    GameStart { seed: u64, map: MapData, server_tick: u32 },
+    GameStart {
+        seed: u64,
+        map: MapData,
+        server_tick: u32,
+    },
 
     /// 游戏状态同步。每 tick 广播一次，包含所有玩家、子弹、爆炸的完整快照。
     State {

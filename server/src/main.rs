@@ -1,5 +1,5 @@
 // Tank Game — 坦克大战
-// Copyright (C) 2026
+// Copyright (C) 2026 Una
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -162,12 +162,14 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: Arc<AppSt
                                 let _ = tx.send(welcome_data).await;
 
                                 // 广播 RoomUpdate 给房间里的所有玩家
-                                if let Some(room) = state.room_manager.get_room_arc(&room_id).await {
+                                if let Some(room) = state.room_manager.get_room_arc(&room_id).await
+                                {
                                     let room_guard = room.lock().await;
                                     let all_players = room_guard.get_room_players();
-                                    let data =
-                                        serde_json::to_vec(&ServerPacket::RoomUpdate { players: all_players })
-                                            .unwrap();
+                                    let data = serde_json::to_vec(&ServerPacket::RoomUpdate {
+                                        players: all_players,
+                                    })
+                                    .unwrap();
                                     let _ = room_guard.broadcast_tx.send(data);
                                 }
 
@@ -370,9 +372,7 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: Arc<AppSt
         if let Some(room) = state.room_manager.get_room_arc(&rid).await {
             let room_guard = room.lock().await;
             let players = room_guard.get_room_players();
-            let data =
-                serde_json::to_vec(&ServerPacket::RoomUpdate { players })
-                    .unwrap();
+            let data = serde_json::to_vec(&ServerPacket::RoomUpdate { players }).unwrap();
             let _ = room_guard.broadcast_tx.send(data);
         }
     }

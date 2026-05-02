@@ -1,5 +1,5 @@
 // Tank Game — 坦克大战
-// Copyright (C) 2026
+// Copyright (C) 2026 Una
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -145,15 +145,19 @@ impl Map {
 
         // 初始化网格
         let mut grid: Vec<Vec<Cell>> = (0..self.cols)
-            .map(|_i| (0..self.rows).map(|_j| Cell {
-                visited: false,
-                walls: CellWalls {
-                    top: true,
-                    right: true,
-                    bottom: true,
-                    left: true,
-                },
-            }).collect())
+            .map(|_i| {
+                (0..self.rows)
+                    .map(|_j| Cell {
+                        visited: false,
+                        walls: CellWalls {
+                            top: true,
+                            right: true,
+                            bottom: true,
+                            left: true,
+                        },
+                    })
+                    .collect()
+            })
             .collect();
 
         let mut stack: Vec<(usize, usize)> = Vec::new();
@@ -205,43 +209,55 @@ impl Map {
 
                 if cell.walls.top {
                     self.walls.push(WallSegment {
-                        x1: x, y1: y,
-                        x2: x + cs, y2: y,
+                        x1: x,
+                        y1: y,
+                        x2: x + cs,
+                        y2: y,
                         wall_type: WallType::Horizontal,
                     });
                 }
                 if cell.walls.left {
                     self.walls.push(WallSegment {
-                        x1: x, y1: y,
-                        x2: x, y2: y + cs,
+                        x1: x,
+                        y1: y,
+                        x2: x,
+                        y2: y + cs,
                         wall_type: WallType::Vertical,
                     });
                 }
                 if i == self.cols - 1 && cell.walls.right {
                     self.walls.push(WallSegment {
-                        x1: x + cs, y1: y,
-                        x2: x + cs, y2: y + cs,
+                        x1: x + cs,
+                        y1: y,
+                        x2: x + cs,
+                        y2: y + cs,
                         wall_type: WallType::Vertical,
                     });
                 }
                 if j == self.rows - 1 && cell.walls.bottom {
                     self.walls.push(WallSegment {
-                        x1: x, y1: y + cs,
-                        x2: x + cs, y2: y + cs,
+                        x1: x,
+                        y1: y + cs,
+                        x2: x + cs,
+                        y2: y + cs,
                         wall_type: WallType::Horizontal,
                     });
                 }
                 if i < self.cols - 1 && cell.walls.right {
                     self.walls.push(WallSegment {
-                        x1: x + cs, y1: y,
-                        x2: x + cs, y2: y + cs,
+                        x1: x + cs,
+                        y1: y,
+                        x2: x + cs,
+                        y2: y + cs,
                         wall_type: WallType::Vertical,
                     });
                 }
                 if j < self.rows - 1 && cell.walls.bottom {
                     self.walls.push(WallSegment {
-                        x1: x, y1: y + cs,
-                        x2: x + cs, y2: y + cs,
+                        x1: x,
+                        y1: y + cs,
+                        x2: x + cs,
+                        y2: y + cs,
                         wall_type: WallType::Horizontal,
                     });
                 }

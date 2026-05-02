@@ -1,5 +1,5 @@
 // Tank Game — 坦克大战
-// Copyright (C) 2026
+// Copyright (C) 2026 Una
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -33,7 +33,11 @@ type WelcomeHandler = (playerId: string, serverTick: number) => void;
 type RoomUpdateHandler = (players: RoomPlayer[]) => void;
 
 /** 游戏开始处理器类型。接收地图种子、地图数据和初始 tick。 */
-type GameStartHandler = (seed: number, map: MapData, serverTick: number) => void;
+type GameStartHandler = (
+  seed: number,
+  map: MapData,
+  serverTick: number
+) => void;
 
 /** 游戏状态同步处理器类型。接收每 tick 的权威状态快照。 */
 type StateHandler = (
@@ -113,7 +117,11 @@ export class GameClient {
    * @returns Promise，resolve 表示连接成功，reject 表示连接失败
    */
   connect(): Promise<void> {
-    if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+    if (
+      this.ws &&
+      (this.ws.readyState === WebSocket.OPEN ||
+        this.ws.readyState === WebSocket.CONNECTING)
+    ) {
       return Promise.resolve();
     }
     return new Promise((resolve, reject) => {
@@ -173,10 +181,19 @@ export class GameClient {
           this.onRoomUpdateHandler?.(packet.players);
           break;
         case 'GameStart':
-          this.onGameStartHandler?.(packet.seed, packet.map, packet.server_tick);
+          this.onGameStartHandler?.(
+            packet.seed,
+            packet.map,
+            packet.server_tick
+          );
           break;
         case 'State':
-          this.onStateHandler?.(packet.tick, packet.players, packet.bullets, packet.explosions);
+          this.onStateHandler?.(
+            packet.tick,
+            packet.players,
+            packet.bullets,
+            packet.explosions
+          );
           break;
         case 'Pong':
           break;
@@ -231,7 +248,12 @@ export class GameClient {
    * @param playerName - 玩家显示名称
    */
   joinRoom(roomId: string, playerName: string) {
-    console.log('[Client] joinRoom called, roomId:', roomId, 'playerName:', playerName);
+    console.log(
+      '[Client] joinRoom called, roomId:',
+      roomId,
+      'playerName:',
+      playerName
+    );
     this.roomId = roomId;
     this.sendPacket({ type: 'Join', room_id: roomId, player_name: playerName });
   }

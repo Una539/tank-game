@@ -1,5 +1,5 @@
 // Tank Game — 坦克大战
-// Copyright (C) 2026
+// Copyright (C) 2026 Una
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -18,12 +18,12 @@
 //! 本模块是协议层的入口，统一导出所有协议相关类型和工具。
 //! 与前端 `src/network/types.ts` + `src/network/client.ts` 共同构成完整的协议实现。
 
-pub mod packets;
 pub mod codec;
 pub mod error;
+pub mod packets;
 
 // 重导出常用类型，简化使用者的导入路径。
 // 这是 Rust 模块设计中的常见做法：在 mod.rs 中集中导出，上层只需 `use protocol::*`。
-pub use packets::*;
 pub use codec::*;
 pub use error::ErrorCode;
+pub use packets::*;

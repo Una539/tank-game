@@ -9,7 +9,7 @@
     "build": "vite build",
     "serve": "vite preview"
   },
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "devDependencies": {
     "@types/node": "^25.6.0",
     "solid-devtools": "^0.34.3",

@@ -1,5 +1,5 @@
 // Tank Game — 坦克大战
-// Copyright (C) 2026
+// Copyright (C) 2026 Una
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -20,7 +20,11 @@ import Tank from './tank';
 import { MapGenerator, WallSegment } from './mapGenerator';
 import Explosion from './explosion';
 import { GameClient } from '../network/client';
-import type { PlayerSnapshot, BulletSnapshot, ExplosionSnapshot } from '../network/types';
+import type {
+  PlayerSnapshot,
+  BulletSnapshot,
+  ExplosionSnapshot,
+} from '../network/types';
 
 /**
  * TankGame 组件的 Props 接口。

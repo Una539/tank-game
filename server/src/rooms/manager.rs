@@ -1,5 +1,5 @@
 // Tank Game — 坦克大战
-// Copyright (C) 2026
+// Copyright (C) 2026 Una
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -26,9 +26,12 @@ use tokio::sync::{broadcast, Mutex};
 use tokio::time::interval;
 use uuid::Uuid;
 
-pub use crate::protocol::{RoomPlayer, ErrorCode, ServerPacket, MapData, PlayerSnapshot, BulletSnapshot, ExplosionSnapshot, WallSegment as PacketWallSegment, WallType};
 use crate::game::{GameState, Map, WallType as GameWallType};
 use crate::networking::GameChannel;
+pub use crate::protocol::{
+    BulletSnapshot, ErrorCode, ExplosionSnapshot, MapData, PlayerSnapshot, RoomPlayer,
+    ServerPacket, WallSegment as PacketWallSegment, WallType,
+};
 
 /// 房间 ID 类型别名。使用 String 而非 Uuid：6 位字母数字组合更短，便于玩家分享。
 pub type RoomId = String;
@@ -126,12 +129,15 @@ impl Room {
             self.owner_id = player_id;
         }
 
-        self.players.insert(player_id, RoomPlayerInner {
-            id: player_id,
-            name: name.to_string(),
-            ready: false,
-            is_owner: player_id == self.owner_id,
-        });
+        self.players.insert(
+            player_id,
+            RoomPlayerInner {
+                id: player_id,
+                name: name.to_string(),
+                ready: false,
+                is_owner: player_id == self.owner_id,
+            },
+        );
     }
 
     /**
@@ -152,12 +158,15 @@ impl Room {
      * @returns 玩家信息列表
      */
     pub fn get_room_players(&self) -> Vec<RoomPlayer> {
-        self.players.values().map(|p| RoomPlayer {
-            id: p.id,
-            name: p.name.clone(),
-            ready: p.ready,
-            is_owner: p.is_owner,
-        }).collect()
+        self.players
+            .values()
+            .map(|p| RoomPlayer {
+                id: p.id,
+                name: p.name.clone(),
+                ready: p.ready,
+                is_owner: p.is_owner,
+            })
+            .collect()
     }
 
     /**
@@ -196,16 +205,21 @@ impl Room {
             cols: self.map.cols as u8,
             rows: self.map.rows as u8,
             cell_size: self.map.cell_size as u16,
-            walls: self.map.walls.iter().map(|w| PacketWallSegment {
-                x1: w.x1,
-                y1: w.y1,
-                x2: w.x2,
-                y2: w.y2,
-                wall_type: match w.wall_type {
-                    GameWallType::Horizontal => WallType::Horizontal,
-                    GameWallType::Vertical => WallType::Vertical,
-                },
-            }).collect(),
+            walls: self
+                .map
+                .walls
+                .iter()
+                .map(|w| PacketWallSegment {
+                    x1: w.x1,
+                    y1: w.y1,
+                    x2: w.x2,
+                    y2: w.y2,
+                    wall_type: match w.wall_type {
+                        GameWallType::Horizontal => WallType::Horizontal,
+                        GameWallType::Vertical => WallType::Vertical,
+                    },
+                })
+                .collect(),
         }
     }
 
@@ -279,7 +293,9 @@ pub async fn run_game_loop(room: Arc<Mutex<Room>>) {
 
                 // 3. 游戏结束广播
                 if game_over {
-                    let game_over_packet = ServerPacket::GameOver { winner: game.winner };
+                    let game_over_packet = ServerPacket::GameOver {
+                        winner: game.winner,
+                    };
                     if let Ok(data) = serde_json::to_vec(&game_over_packet) {
                         let _ = room.broadcast_tx.send(data);
                     }
@@ -361,7 +377,12 @@ impl RoomManager {
      * @param player_name - 玩家显示名称
      * @returns Ok(players) 加入成功，Err(ErrorCode) 加入失败
      */
-    pub async fn join_room(&self, player_id: &Uuid, room_id: &str, player_name: &str) -> Result<Vec<RoomPlayer>, ErrorCode> {
+    pub async fn join_room(
+        &self,
+        player_id: &Uuid,
+        room_id: &str,
+        player_name: &str,
+    ) -> Result<Vec<RoomPlayer>, ErrorCode> {
         let mut rooms = self.rooms.lock().await;
 
         // 房间不存在：自动创建
@@ -470,7 +491,10 @@ impl RoomManager {
      * @param room_id - 房间 ID
      * @returns Some(Receiver) 如果房间存在
      */
-    pub async fn get_room_broadcast_rx(&self, room_id: &str) -> Option<broadcast::Receiver<Vec<u8>>> {
+    pub async fn get_room_broadcast_rx(
+        &self,
+        room_id: &str,
+    ) -> Option<broadcast::Receiver<Vec<u8>>> {
         let rooms = self.rooms.lock().await;
         if let Some(room) = rooms.get(room_id) {
             Some(room.lock().await.broadcast_tx.subscribe())
@@ -489,7 +513,14 @@ impl RoomManager {
      * @param keys - 按键状态
      * @param timestamp - 客户端时间戳
      */
-    pub async fn submit_input(&self, player_id: &Uuid, room_id: &str, tick: u32, keys: crate::protocol::KeyState, timestamp: u64) {
+    pub async fn submit_input(
+        &self,
+        player_id: &Uuid,
+        room_id: &str,
+        tick: u32,
+        keys: crate::protocol::KeyState,
+        timestamp: u64,
+    ) {
         let rooms = self.rooms.lock().await;
         if let Some(room) = rooms.get(room_id) {
             let mut room = room.lock().await;

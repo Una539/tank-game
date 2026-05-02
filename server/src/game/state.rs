@@ -1,5 +1,5 @@
 // Tank Game — 坦克大战
-// Copyright (C) 2026
+// Copyright (C) 2026 Una
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -23,8 +23,8 @@ use std::sync::Arc;
 
 use uuid::Uuid;
 
-use crate::protocol::{KeyState, PlayerSnapshot, BulletSnapshot, ExplosionSnapshot};
-use crate::game::{Tank, Bullet, Explosion, Map, WallSegment, PendingInput};
+use crate::game::{Bullet, Explosion, Map, PendingInput, Tank, WallSegment};
+use crate::protocol::{BulletSnapshot, ExplosionSnapshot, KeyState, PlayerSnapshot};
 
 /**
  * 游戏状态管理器。
@@ -118,11 +118,14 @@ impl GameState {
      */
     pub fn add_player(&mut self, player_id: Uuid, _name: &str, start_x: f64, start_y: f64) {
         let tank = Tank::new(start_x, start_y);
-        self.players.insert(player_id, PlayerState {
-            id: player_id,
-            tank,
-            inputs: Vec::new(),
-        });
+        self.players.insert(
+            player_id,
+            PlayerState {
+                id: player_id,
+                tank,
+                inputs: Vec::new(),
+            },
+        );
     }
 
     /**
@@ -147,7 +150,11 @@ impl GameState {
      */
     pub fn queue_input(&mut self, player_id: &Uuid, tick: u32, keys: KeyState, timestamp: u64) {
         if let Some(ps) = self.players.get_mut(player_id) {
-            ps.inputs.push(PendingInput { tick, keys, timestamp });
+            ps.inputs.push(PendingInput {
+                tick,
+                keys,
+                timestamp,
+            });
         }
     }
 
@@ -222,7 +229,11 @@ impl GameState {
                 }
                 if Self::bullet_hit_tank(bullet, &target.tank) {
                     target.tank.is_dead = true;
-                    self.explosions.push(Explosion::new(self.next_explosion_id, target.tank.x, target.tank.y));
+                    self.explosions.push(Explosion::new(
+                        self.next_explosion_id,
+                        target.tank.x,
+                        target.tank.y,
+                    ));
                     self.next_explosion_id += 1;
                 }
             }
@@ -320,14 +331,17 @@ impl GameState {
      * @returns 所有玩家的快照列表
      */
     pub fn get_all_snapshots(&self) -> Vec<PlayerSnapshot> {
-        self.players.values().map(|ps| PlayerSnapshot {
-            id: ps.id,
-            x: ps.tank.x,
-            y: ps.tank.y,
-            rotation: ps.tank.rotation,
-            is_dead: ps.tank.is_dead,
-            shots_remaining: ps.tank.shots_remaining,
-        }).collect()
+        self.players
+            .values()
+            .map(|ps| PlayerSnapshot {
+                id: ps.id,
+                x: ps.tank.x,
+                y: ps.tank.y,
+                rotation: ps.tank.rotation,
+                is_dead: ps.tank.is_dead,
+                shots_remaining: ps.tank.shots_remaining,
+            })
+            .collect()
     }
 
     /**
@@ -360,11 +374,14 @@ impl GameState {
      * @returns 所有爆炸的快照列表
      */
     pub fn get_explosion_snapshots(&self) -> Vec<ExplosionSnapshot> {
-        self.explosions.iter().map(|e| ExplosionSnapshot {
-            id: e.id,
-            x: e.x,
-            y: e.y,
-            progress: e.progress(),
-        }).collect()
+        self.explosions
+            .iter()
+            .map(|e| ExplosionSnapshot {
+                id: e.id,
+                x: e.x,
+                y: e.y,
+                progress: e.progress(),
+            })
+            .collect()
     }
 }

@@ -1,5 +1,5 @@
 // Tank Game — 坦克大战
-// Copyright (C) 2026
+// Copyright (C) 2026 Una
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -112,9 +112,9 @@ impl Bullet {
      * @param direction - 发射方向（弧度）
      * @param mode - 子弹失效策略
      *
-      * 为什么 spawn_time 初始为 0：由外部（GameState）调用 `set_spawn_time` 设置，
-      * 解耦创建与计时起点，便于测试和不同场景复用。
-      */
+     * 为什么 spawn_time 初始为 0：由外部（GameState）调用 `set_spawn_time` 设置，
+     * 解耦创建与计时起点，便于测试和不同场景复用。
+     */
     pub fn new(id: u32, x: f64, y: f64, direction: f64, mode: BulletMode) -> Self {
         Self {
             id,

@@ -1,5 +1,5 @@
 // Tank Game — 坦克大战
-// Copyright (C) 2026
+// Copyright (C) 2026 Una
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -25,8 +25,8 @@
 //! - rooms：房间管理（创建、加入、游戏循环）
 //! - utils：通用工具（数学、时间）
 
-pub mod protocol;
 pub mod game;
 pub mod networking;
+pub mod protocol;
 pub mod rooms;
 pub mod utils;

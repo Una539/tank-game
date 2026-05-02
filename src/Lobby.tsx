@@ -1,5 +1,5 @@
 // Tank Game — 坦克大战
-// Copyright (C) 2026
+// Copyright (C) 2026 Una
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -74,8 +74,16 @@ const Lobby = (props: LobbyProps) => {
 
     // 注册 Welcome 处理器：连接成功后服务器分配 playerId
     props.client.onWelcome((playerId, serverTick) => {
-      console.log('[Lobby] Welcome received, playerId:', playerId, 'serverTick:', serverTick);
-      console.log('[Lobby] client.playerId after welcome:', props.client.playerId);
+      console.log(
+        '[Lobby] Welcome received, playerId:',
+        playerId,
+        'serverTick:',
+        serverTick
+      );
+      console.log(
+        '[Lobby] client.playerId after welcome:',
+        props.client.playerId
+      );
     });
 
     // 注册 RoomUpdate 处理器：刷新玩家列表和房主状态
