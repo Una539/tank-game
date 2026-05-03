@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import { createSignal, onMount, onCleanup } from 'solid-js';
+import { t } from './i18n';
 import { GameClient } from './network/client';
 import type { RoomPlayer } from './network/types';
 import type { WallSegment } from './Games/mapGenerator';
@@ -183,7 +184,7 @@ const Lobby = (props: LobbyProps) => {
 
   return (
     <div class="lobby-container">
-      <h2>Lobby</h2>
+      <h2>{t('lobby.title')}</h2>
 
       {/* 错误提示 */}
       {error() && <div class="lobby-error">{error()}</div>}
@@ -192,36 +193,36 @@ const Lobby = (props: LobbyProps) => {
       {!roomId() ? (
         <div class="lobby-setup">
           <button class="lobby-btn" onClick={handleCreateRoom}>
-            Create Room
+            {t('lobby.createRoom')}
           </button>
           <div class="lobby-join">
             <input
               type="text"
-              placeholder="Or enter Room ID to join"
+              placeholder={t('lobby.joinPlaceholder')}
               value={joinInput()}
               onInput={(e) => setJoinInput(e.currentTarget.value)}
               class="lobby-input"
             />
             <button class="lobby-btn" onClick={handleJoinRoom}>
-              Join Room
+              {t('lobby.joinRoom')}
             </button>
           </div>
         </div>
       ) : (
         /* 已加入房间：显示房间信息和玩家列表 */
         <div class="lobby-room">
-          <div class="room-id">Room: {roomId()}</div>
+          <div class="room-id">{t('lobby.roomLabel', { id: roomId() })}</div>
 
           {/* 玩家列表 */}
           <div class="player-list">
-            <h3>Players ({players().length}/4)</h3>
+            <h3>{t('lobby.playersTitle', { count: String(players().length) })}</h3>
             {players().map((player) => (
               <div class={`player-item ${player.ready ? 'ready' : ''}`}>
                 <span class="player-name">
-                  {player.name} {player.is_owner && '(Owner)'}
+                  {player.name} {player.is_owner && `(${t('lobby.owner')})`}
                 </span>
                 <span class="player-status">
-                  {player.ready ? '✓ Ready' : 'Not Ready'}
+                  {player.ready ? t('lobby.readyStatus') : t('lobby.notReadyStatus')}
                 </span>
               </div>
             ))}
@@ -232,16 +233,16 @@ const Lobby = (props: LobbyProps) => {
             {/* Ready/Unready 按钮：切换自己的准备状态 */}
             <button class="lobby-btn ready-btn" onClick={handleReady}>
               {players().find((p) => p.id === props.client.playerId)?.ready
-                ? 'Unready'
-                : 'Ready'}
+                ? t('lobby.unreadyBtn')
+                : t('lobby.readyBtn')}
             </button>
             {/* 房主视角：所有人就绪后显示开始提示 */}
             {allReady() && isOwner() && (
-              <div class="room-starting">All players ready! Starting...</div>
+              <div class="room-starting">{t('lobby.allReadyStarting')}</div>
             )}
-            {/* Leave Room 按钮 */}
+            {/* 离开房间按钮 */}
             <button class="lobby-btn leave-btn" onClick={handleLeave}>
-              Leave Room
+              {t('lobby.leaveRoom')}
             </button>
           </div>
         </div>

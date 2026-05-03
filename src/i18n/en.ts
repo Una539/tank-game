@@ -1,0 +1,29 @@
+export const dict = {
+  menu: {
+    title: 'Tank Game',
+    singlePlayer: 'Single Player',
+    multiplayer: 'Multiplayer',
+    playerNamePlaceholder: 'Player Name',
+    serverUrlPlaceholder: 'Server (ws://host:port)',
+    langSwitch: '中文',
+  },
+  lobby: {
+    title: 'Lobby',
+    createRoom: 'Create Room',
+    joinRoom: 'Join Room',
+    joinPlaceholder: 'Or enter Room ID to join',
+    roomLabel: 'Room: {{id}}',
+    playersTitle: 'Players ({{count}}/4)',
+    owner: 'Owner',
+    readyStatus: '\u2713 Ready',
+    notReadyStatus: 'Not Ready',
+    readyBtn: 'Ready',
+    unreadyBtn: 'Unready',
+    allReadyStarting: 'All players ready! Starting...',
+    leaveRoom: 'Leave Room',
+  },
+  app: {
+    connectError: 'Failed to connect to server at {{url}}. Make sure the server is running.',
+  },
+  noscript: 'You need to enable JavaScript to run this app.',
+};

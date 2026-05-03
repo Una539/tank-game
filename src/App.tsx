@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import { createSignal, Show } from 'solid-js';
+import { createSignal, Show, createEffect } from 'solid-js';
+import { t } from './i18n';
 import TankGame from './Games/Game';
 import Menu from './Menu';
 import Lobby from './Lobby';
@@ -65,6 +66,11 @@ const App = () => {
   /** 当前玩家名称。从 localStorage 读取或用户输入。 */
   const [playerName, setPlayerName] = createSignal('');
 
+  /** 自动同步页面标题随语言变化 */
+  createEffect(() => {
+    document.title = t('menu.title');
+  });
+
   /**
    * 处理开始本地游戏。
    * 设置游戏模式为 local，切换到游戏场景。
@@ -100,9 +106,7 @@ const App = () => {
       .connect()
       .catch((e) => {
         console.error('Failed to connect to server:', e);
-        alert(
-          `Failed to connect to server at ${url}. Make sure the server is running.`
-        );
+        alert(t('app.connectError', { url }));
       });
   };
 
