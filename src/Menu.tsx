@@ -15,6 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import { createSignal } from 'solid-js';
+import { SegmentGroup } from '@ark-ui/solid/segment-group';
+import { Field } from '@ark-ui/solid/field';
+import { Globe } from 'lucide-solid';
 import { t, locale, changeLocale } from './i18n';
 
 /**
@@ -30,21 +33,13 @@ interface MenuProps {
 
 /**
  * 主菜单组件。
- * 游戏入口界面，提供两种游戏模式的选择：
- * - 单人游戏：本地单人游戏，无需网络连接
- * - 多人游戏：联网多人游戏，需要输入玩家名称并连接服务器
- *
- * 界面布局（从上到下）：
- * 1. 标题
- * 2. "单人游戏" 按钮
- * 3. 玩家名称输入框
- * 4. "多人游戏" 按钮（需要先输入名称才能点击）
- * 5. 语言切换按钮
- *
- * 与后端 `server/src/main.rs` 的对应：点击多人游戏后前端会建立 WebSocket 连接。
+ * 游戏入口界面，使用 Ark UI SegmentGroup 先选择游戏模式，再填写对应表单。
  */
 const Menu = (props: MenuProps) => {
-  /** 玩家输入的名称。SolidJS 的 createSignal 创建响应式状态。 */
+  /** 当前选中的游戏模式。 */
+  const [mode, setMode] = createSignal<'single' | 'multiplayer'>('single');
+
+  /** 玩家输入的名称。 */
   const [playerName, setPlayerName] = createSignal('');
 
   const [serverUrl, setServerUrl] = createSignal(
@@ -52,14 +47,17 @@ const Menu = (props: MenuProps) => {
   );
 
   /**
-   * 处理点击多人游戏按钮。
-   * 验证名称非空后保存到 localStorage（便于下次自动填充），
-   * 然后调用 onMultiplayerStart 进入连接流程。
+   * 处理点击开始按钮。
+   * 单人模式直接进入本地游戏；多人模式验证名称后连接服务器。
    */
-  const handleMultiplayer = () => {
-    if (playerName().trim()) {
-      localStorage.setItem('tank_player_name', playerName().trim());
-      props.onMultiplayerStart(serverUrl().trim());
+  const handleStart = () => {
+    if (mode() === 'single') {
+      props.onLocalStart();
+    } else {
+      if (playerName().trim()) {
+        localStorage.setItem('tank_player_name', playerName().trim());
+        props.onMultiplayerStart(serverUrl().trim());
+      }
     }
   };
 
@@ -69,36 +67,75 @@ const Menu = (props: MenuProps) => {
 
   return (
     <div class="menu-container">
-      <button class="lang-switch" onClick={toggleLocale}>
+      <div class="card">
+        <h1 class="card-title">{t('menu.title')}</h1>
+
+        {/* 模式选择器 */}
+        <SegmentGroup.Root
+          value={mode()}
+          onValueChange={(e) =>
+            setMode(e.value as 'single' | 'multiplayer')
+          }
+        >
+          <SegmentGroup.Indicator />
+          <SegmentGroup.Item value="single">
+            <SegmentGroup.ItemText>
+              {t('menu.singlePlayer')}
+            </SegmentGroup.ItemText>
+            <SegmentGroup.ItemControl />
+            <SegmentGroup.ItemHiddenInput />
+          </SegmentGroup.Item>
+          <SegmentGroup.Item value="multiplayer">
+            <SegmentGroup.ItemText>
+              {t('menu.multiplayer')}
+            </SegmentGroup.ItemText>
+            <SegmentGroup.ItemControl />
+            <SegmentGroup.ItemHiddenInput />
+          </SegmentGroup.Item>
+        </SegmentGroup.Root>
+
+        {/* 多人模式表单 */}
+        {mode() === 'multiplayer' && (
+          <>
+            <Field.Root>
+              <Field.Label>{t('menu.playerNamePlaceholder')}</Field.Label>
+              <Field.Input
+                type="text"
+                placeholder={t('menu.playerNamePlaceholder')}
+                value={playerName()}
+                onInput={(e) => setPlayerName(e.currentTarget.value)}
+              />
+            </Field.Root>
+
+            <Field.Root>
+              <Field.Label>{t('menu.serverUrlPlaceholder')}</Field.Label>
+              <Field.Input
+                type="text"
+                placeholder={t('menu.serverUrlPlaceholder')}
+                value={serverUrl()}
+                onInput={(e) => setServerUrl(e.currentTarget.value)}
+              />
+            </Field.Root>
+          </>
+        )}
+
+        {/* 开始按钮 */}
+        <button
+          class="btn btn-primary"
+          onClick={handleStart}
+          disabled={mode() === 'multiplayer' && !playerName().trim()}
+        >
+          {mode() === 'single'
+            ? t('menu.singlePlayer')
+            : t('menu.multiplayer')}
+        </button>
+      </div>
+
+      {/* 语言切换 */}
+      <button class="btn btn-ghost" onClick={toggleLocale}>
+        <Globe size={16} />
         {t('menu.langSwitch')}
       </button>
-      <h1>{t('menu.title')}</h1>
-      <div class="menu-buttons">
-        {/* 单人游戏按钮：点击直接进入本地游戏 */}
-        <button class="menu-btn" onClick={props.onLocalStart}>
-          {t('menu.singlePlayer')}
-        </button>
-        <div class="multiplayer-section">
-          {/* 玩家名称输入框：只有输入名称后才能点击多人游戏 */}
-          <input
-            type="text"
-            placeholder={t('menu.playerNamePlaceholder')}
-            value={playerName()}
-            onInput={(e) => setPlayerName(e.currentTarget.value)}
-            class="menu-input"
-          />
-          <input
-            type="text"
-            placeholder={t('menu.serverUrlPlaceholder')}
-            value={serverUrl()}
-            onInput={(e) => setServerUrl(e.currentTarget.value)}
-            class="menu-input"
-          />
-          <button class="menu-btn" onClick={handleMultiplayer}>
-            {t('menu.multiplayer')}
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

@@ -18,6 +18,10 @@ app.config.timestamp_*.js
 .project
 .classpath
 *.launch
+
+# LLM context files
+llms.txt
+llms-*.txt
 .settings/
 
 # Temp

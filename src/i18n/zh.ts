@@ -21,6 +21,10 @@ export const dict = {
     unreadyBtn: '取消准备',
     allReadyStarting: '所有玩家已准备！游戏即将开始...',
     leaveRoom: '离开房间',
+    or: '或',
+    errorTitle: '错误',
+    ok: '确定',
+    roomLabelPrefix: '房间号',
   },
   app: {
     connectError: '无法连接到服务器 {{url}}，请确保服务器已启动。',

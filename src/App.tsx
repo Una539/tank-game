@@ -68,7 +68,7 @@ const App = () => {
 
   /** 自动同步页面标题随语言变化 */
   createEffect(() => {
-    document.title = t('menu.title');
+    document.title = t('menu.title') || 'Tank Game';
   });
 
   /**

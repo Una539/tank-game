@@ -14,7 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import { createSignal, onMount, onCleanup } from 'solid-js';
+import { createSignal, onMount } from 'solid-js';
+import { Portal } from 'solid-js/web';
+import { Field } from '@ark-ui/solid/field';
+import { Switch } from '@ark-ui/solid/switch';
+import { Dialog } from '@ark-ui/solid/dialog';
+import {
+  Users,
+  LogOut,
+  Swords,
+  DoorOpen,
+  AlertCircle,
+} from 'lucide-solid';
 import { t } from './i18n';
 import { GameClient } from './network/client';
 import type { RoomPlayer } from './network/types';
@@ -24,84 +35,42 @@ import type { WallSegment } from './Games/mapGenerator';
  * Lobby 组件的 Props 接口。
  */
 interface LobbyProps {
-  /** WebSocket 客户端实例。由 App.tsx 创建并传入，用于发送 Join/Ready/Leave 等消息。 */
+  /** WebSocket 客户端实例。 */
   client: GameClient;
 
-  /** 游戏开始回调。收到服务器 GameStart 包时触发，携带地图墙壁数据。 */
+  /** 游戏开始回调。 */
   onGameStart: (walls: WallSegment[]) => void;
 
-  /** 当前玩家的显示名称。从 App.tsx 传入，用于 Join 请求。 */
+  /** 当前玩家的显示名称。 */
   playerName: string;
 }
 
 /**
  * 游戏大厅组件。
- * 多人模式下的等待/准备界面，功能包括：
- * 1. 创建房间（自动生成 6 位房间 ID）
- * 2. 加入房间（输入已有房间 ID）
- * 3. 查看房间内玩家列表和准备状态
- * 4. 切换自己的 Ready/Unready 状态
- * 5. 离开房间
- *
- * 界面状态（两种模式）：
- * - 未加入房间：显示 "Create Room" 按钮 + 房间 ID 输入框 + "Join Room" 按钮
- * - 已加入房间：显示房间 ID + 玩家列表（含 Ready 状态）+ "Ready/Unready" 按钮 + "Leave Room" 按钮
- *
- * 与后端 `server/src/rooms/manager.rs` 的 `RoomManager` 和 `Room` 对应：
- * 本组件是房间状态的可视化呈现，通过网络协议与后端同步。
+ * 使用 Ark UI Field、Switch、Dialog 重构为中性风格界面。
  */
 const Lobby = (props: LobbyProps) => {
-  /** 当前加入的房间 ID。空字符串表示未加入任何房间。 */
   const [roomId, setRoomId] = createSignal('');
-
-  /** 房间 ID 输入框的值。用于加入已有房间。 */
   const [joinInput, setJoinInput] = createSignal('');
-
-  /** 房间内所有玩家列表。由服务器的 RoomUpdate 包更新。 */
   const [players, setPlayers] = createSignal<RoomPlayer[]>([]);
-
-  /** 当前玩家是否为房主。由 RoomUpdate 包中的 is_owner 字段确定。 */
   const [isOwner, setIsOwner] = createSignal(false);
-
-  /** 错误消息。操作失败时显示（如房间已满）。 */
   const [error, setError] = createSignal('');
+  const [errorOpen, setErrorOpen] = createSignal(false);
 
-  /**
-   * 组件挂载时注册网络事件处理器。
-   * SolidJS 的 onMount 在 DOM 插入后执行，适合注册外部事件监听。
-   */
   onMount(() => {
-    console.log('[Lobby] Mounted, client playerId:', props.client.playerId);
-
-    // 注册 Welcome 处理器：连接成功后服务器分配 playerId
-    props.client.onWelcome((playerId, serverTick) => {
-      console.log(
-        '[Lobby] Welcome received, playerId:',
-        playerId,
-        'serverTick:',
-        serverTick
-      );
-      console.log(
-        '[Lobby] client.playerId after welcome:',
-        props.client.playerId
-      );
+    props.client.onWelcome((playerId) => {
+      console.log('[Lobby] Welcome received, playerId:', playerId);
     });
 
-    // 注册 RoomUpdate 处理器：刷新玩家列表和房主状态
     props.client.onRoomUpdate((updatedPlayers) => {
-      console.log('[Lobby] onRoomUpdate callback fired:', updatedPlayers);
       setPlayers(updatedPlayers);
       const me = updatedPlayers.find((p) => p.id === props.client.playerId);
       if (me) {
-        console.log('[Lobby] Found me in update, isOwner:', me.is_owner);
         setIsOwner(me.is_owner);
       }
     });
 
-    // 注册 GameStart 处理器：收到后解析地图数据并进入游戏
     props.client.onGameStart((_seed, mapData, _tick) => {
-      console.log('[Lobby] GameStart received, walls:', mapData.walls?.length);
-      // 将后端 WallType 枚举转换为前端 'h'/'v' 字符串
       const walls: WallSegment[] = mapData.walls.map((w: any) => ({
         x1: w.x1,
         y1: w.y1,
@@ -109,24 +78,15 @@ const Lobby = (props: LobbyProps) => {
         y2: w.y2,
         type: (w.wall_type === 'Horizontal' ? 'h' : 'v') as 'h' | 'v',
       }));
-      console.log('[Lobby] Transformed walls:', walls);
       props.onGameStart(walls);
     });
 
-    // 注册 Error 处理器：显示错误消息
     props.client.onError((_code, message) => {
       setError(message);
+      setErrorOpen(true);
     });
   });
 
-  onCleanup(() => {
-    // nothing to clean up
-  });
-
-  /**
-   * 创建新房间。
-   * 生成随机 6 位房间 ID，发送 Join 请求（后端会自动创建不存在的房间）。
-   */
   const handleCreateRoom = () => {
     setError('');
     const newRoomId = generateRoomId();
@@ -134,10 +94,6 @@ const Lobby = (props: LobbyProps) => {
     setRoomId(newRoomId);
   };
 
-  /**
-   * 加入已有房间。
-   * 读取输入框中的房间 ID，发送 Join 请求。
-   */
   const handleJoinRoom = () => {
     setError('');
     if (joinInput().trim()) {
@@ -146,23 +102,10 @@ const Lobby = (props: LobbyProps) => {
     }
   };
 
-  /**
-   * 切换准备状态。
-   * 点击 "Ready" 变为 "Unready"，反之亦然。
-   * 发送 Ready 包给服务器，服务器广播 RoomUpdate 并检查是否全部就绪。
-   */
-  const handleReady = () => {
-    console.log('[Lobby] handleReady called');
-    console.log('[Lobby] Current players:', players());
-    console.log('[Lobby] Client playerId:', props.client.playerId);
-    console.log('[Lobby] Client roomId:', props.client.roomId);
+  const handleReadyToggle = () => {
     props.client.sendReady();
   };
 
-  /**
-   * 离开当前房间。
-   * 发送 Leave 包，重置本地状态。
-   */
   const handleLeave = () => {
     props.client.sendLeave();
     setRoomId('');
@@ -171,92 +114,179 @@ const Lobby = (props: LobbyProps) => {
     setError('');
   };
 
-  /**
-   * 检查是否所有玩家都已准备。
-   * 要求至少 2 人。用于在房主视角显示 "All players ready! Starting..." 提示。
-   *
-   * @returns true 表示所有玩家准备就绪且人数 >= 2
-   */
   const allReady = () => {
     const p = players();
     return p.length >= 2 && p.every((player) => player.ready);
   };
 
+  const meReady = () => {
+    const me = players().find((p) => p.id === props.client.playerId);
+    return me?.ready ?? false;
+  };
+
   return (
     <div class="lobby-container">
-      <h2>{t('lobby.title')}</h2>
+      {/* 错误弹窗 */}
+      <Dialog.Root
+        open={errorOpen()}
+        onOpenChange={(e) => {
+          setErrorOpen(e.open);
+          if (!e.open) setError('');
+        }}
+      >
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Title
+                style={{
+                  display: 'flex',
+                  'align-items': 'center',
+                  gap: '8px',
+                  color: '#dc2626',
+                }}
+              >
+                <AlertCircle size={20} />
+                {t('lobby.errorTitle')}
+              </Dialog.Title>
+              <Dialog.Description>{error()}</Dialog.Description>
+              <button
+                class="btn btn-primary"
+                onClick={() => {
+                  setErrorOpen(false);
+                  setError('');
+                }}
+              >
+                {t('lobby.ok')}
+              </button>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
 
-      {/* 错误提示 */}
-      {error() && <div class="lobby-error">{error()}</div>}
+      <div class="card">
+        <h2 class="card-title">{t('lobby.title')}</h2>
 
-      {/* 未加入房间：显示创建/加入界面 */}
-      {!roomId() ? (
-        <div class="lobby-setup">
-          <button class="lobby-btn" onClick={handleCreateRoom}>
-            {t('lobby.createRoom')}
-          </button>
-          <div class="lobby-join">
-            <input
-              type="text"
-              placeholder={t('lobby.joinPlaceholder')}
-              value={joinInput()}
-              onInput={(e) => setJoinInput(e.currentTarget.value)}
-              class="lobby-input"
-            />
-            <button class="lobby-btn" onClick={handleJoinRoom}>
-              {t('lobby.joinRoom')}
+        {!roomId() ? (
+          <div class="lobby-setup">
+            <button class="btn btn-primary" onClick={handleCreateRoom}>
+              <Swords size={18} />
+              {t('lobby.createRoom')}
             </button>
-          </div>
-        </div>
-      ) : (
-        /* 已加入房间：显示房间信息和玩家列表 */
-        <div class="lobby-room">
-          <div class="room-id">{t('lobby.roomLabel', { id: roomId() })}</div>
 
-          {/* 玩家列表 */}
-          <div class="player-list">
-            <h3>{t('lobby.playersTitle', { count: String(players().length) })}</h3>
-            {players().map((player) => (
-              <div class={`player-item ${player.ready ? 'ready' : ''}`}>
-                <span class="player-name">
-                  {player.name} {player.is_owner && `(${t('lobby.owner')})`}
-                </span>
-                <span class="player-status">
-                  {player.ready ? t('lobby.readyStatus') : t('lobby.notReadyStatus')}
+            <div class="divider">{t('lobby.or')}</div>
+
+            <div class="lobby-join">
+              <Field.Root>
+                <Field.Label>{t('lobby.joinPlaceholder')}</Field.Label>
+                <Field.Input
+                  type="text"
+                  placeholder={t('lobby.joinPlaceholder')}
+                  value={joinInput()}
+                  onInput={(e) => setJoinInput(e.currentTarget.value)}
+                  onKeyDown={(e) =>
+                    e.key === 'Enter' && handleJoinRoom()
+                  }
+                />
+              </Field.Root>
+              <button class="btn btn-secondary" onClick={handleJoinRoom}>
+                <DoorOpen size={18} />
+                {t('lobby.joinRoom')}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div class="lobby-room">
+            <div class="room-header">
+              <span class="room-label">{t('lobby.roomLabelPrefix')}</span>
+              <div class="room-id">{roomId()}</div>
+            </div>
+
+            <div class="player-list">
+              <div
+                style={{
+                  display: 'flex',
+                  'align-items': 'center',
+                  gap: '8px',
+                  'margin-bottom': '4px',
+                }}
+              >
+                <Users size={16} color="#a3a3a3" />
+                <span
+                  style={{
+                    'font-size': '0.8125rem',
+                    'font-weight': '600',
+                    color: '#a3a3a3',
+                  }}
+                >
+                  {t('lobby.playersTitle', {
+                    count: String(players().length),
+                  })}
                 </span>
               </div>
-            ))}
-          </div>
+              {players().map((player) => (
+                <div
+                  class={`player-item ${player.ready ? 'ready' : ''}`}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      'align-items': 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <span class="player-name">{player.name}</span>
+                    {player.is_owner && (
+                      <span class="player-badge">{t('lobby.owner')}</span>
+                    )}
+                  </div>
+                  <span
+                    class={`player-status ${player.ready ? 'ready' : ''}`}
+                  >
+                    {player.ready
+                      ? t('lobby.readyStatus')
+                      : t('lobby.notReadyStatus')}
+                  </span>
+                </div>
+              ))}
+            </div>
 
-          {/* 操作按钮 */}
-          <div class="lobby-actions">
-            {/* Ready/Unready 按钮：切换自己的准备状态 */}
-            <button class="lobby-btn ready-btn" onClick={handleReady}>
-              {players().find((p) => p.id === props.client.playerId)?.ready
-                ? t('lobby.unreadyBtn')
-                : t('lobby.readyBtn')}
-            </button>
-            {/* 房主视角：所有人就绪后显示开始提示 */}
-            {allReady() && isOwner() && (
-              <div class="room-starting">{t('lobby.allReadyStarting')}</div>
-            )}
-            {/* 离开房间按钮 */}
-            <button class="lobby-btn leave-btn" onClick={handleLeave}>
-              {t('lobby.leaveRoom')}
-            </button>
+            <div class="actions">
+              <Switch.Root
+                checked={meReady()}
+                onCheckedChange={() => handleReadyToggle()}
+              >
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+                <Switch.Label>
+                  {meReady()
+                    ? t('lobby.unreadyBtn')
+                    : t('lobby.readyBtn')}
+                </Switch.Label>
+                <Switch.HiddenInput />
+              </Switch.Root>
+
+              {allReady() && isOwner() && (
+                <div class="all-ready">
+                  {t('lobby.allReadyStarting')}
+                </div>
+              )}
+
+              <button class="btn btn-secondary" onClick={handleLeave}>
+                <LogOut size={18} />
+                {t('lobby.leaveRoom')}
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
 
 /**
  * 生成随机房间 ID。
- * 6 位小写字母+数字组合，共 36^6 ≈ 21 亿种可能，碰撞概率极低。
- * 与后端 `server/src/rooms/manager.rs` 的 `generate_room_id` 方法对应。
- *
- * @returns 新生成的房间 ID
  */
 function generateRoomId(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';

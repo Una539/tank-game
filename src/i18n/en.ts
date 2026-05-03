@@ -21,6 +21,10 @@ export const dict = {
     unreadyBtn: 'Unready',
     allReadyStarting: 'All players ready! Starting...',
     leaveRoom: 'Leave Room',
+    or: 'OR',
+    errorTitle: 'Error',
+    ok: 'OK',
+    roomLabelPrefix: 'ROOM',
   },
   app: {
     connectError: 'Failed to connect to server at {{url}}. Make sure the server is running.',
