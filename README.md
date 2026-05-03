@@ -46,7 +46,7 @@ Controls / 操作：
 |-------------|------------------|
 | Frontend / 前端 | [SolidJS](https://solidjs.com) (reactive UI / 响应式 UI), [Pixi.js v8](https://pixijs.com) (2D rendering / 2D 渲染), [Vite](https://vitejs.dev) (build tool / 构建工具) |
 | Backend / 后端 | [Rust](https://rust-lang.org), [Tokio](https://tokio.rs) (async runtime / 异步运行时), [tokio-tungstenite](https://github.com/snapview/tokio-tungstenite) (WebSocket) |
-| Protocol / 协议 | JSON over WebSocket (planned: Postcard binary) / WebSocket 传输 JSON（计划迁移：Postcard 二进制） |
+| Protocol / 协议 | MessagePack over WebSocket / WebSocket 传输 MessagePack 二进制 |
 
 ---
 
@@ -92,7 +92,7 @@ tank-solid/
 - **Authoritative Server / 权威服务器** — server runs the "real" physics; client predicts for responsiveness / 服务器运行"真实"物理，客户端做预测以保证响应性
 - **Canvas / 画布**: 800×800 pixels / 像素, **Grid / 网格**: 16×16 cells at 50px each / 每个 50 像素
 - **Tick Rate / 刷新率**: ~62.5 TPS (16ms per tick) / 每秒约 62.5 帧（每帧 16 毫秒）
-- **Server uses JSON / 服务器使用 JSON** — originally planned Postcard binary, currently serde_json for simplicity / 原计划使用 Postcard 二进制，目前为简化使用 serde_json
+- **Server uses MessagePack / 服务器使用 MessagePack** — both frontend and server use binary MessagePack via `rmp-serde` and `@msgpack/msgpack` / 前后端均通过 `rmp-serde` 和 `@msgpack/msgpack` 使用二进制 MessagePack
 - **No frontend test framework / 前端暂无测试框架** configured yet — no vitest/jest in deps / 尚未配置 vitest/jest
 - **Game comments in Chinese / 游戏代码注释为中文** — preserves the project's established convention / 保留项目既有约定
 

@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import * as msgpack from '@msgpack/msgpack';
+
 import type {
   KeyState,
   PlayerSnapshot,
@@ -109,6 +111,10 @@ export class GameClient {
     this.url = url;
   }
 
+  setServerUrl(url: string) {
+    this.url = url;
+  }
+
   /**
    * 建立 WebSocket 连接。
    * 如果已连接或正在连接，返回已 resolve 的 Promise。
@@ -154,21 +160,24 @@ export class GameClient {
 
   /**
    * 处理收到的服务器消息。
-   * 服务器目前使用 JSON 序列化（原计划用 Postcard 二进制），
-   * 所以这里先判断 ArrayBuffer 并用 TextDecoder 解码为字符串，再 JSON.parse。
-   * 与后端 `server/src/main.rs` 中 `serde_json::to_vec` 的序列化方式对应。
+   * 服务器使用 MessagePack 二进制序列化（`rmp-serde`），
+   * 所以这里用 `msgpack.decode` 直接解码 ArrayBuffer/Uint8Array。
+   * 保留 JSON.parse 作为降级兼容，但正常情况下不会用到。
+   * 与后端 `server/src/main.rs` 中 `Codec::encode` 的序列化方式对应。
    *
    * @param data - WebSocket 消息数据，可能是 ArrayBuffer 或 string
    */
   private handleMessage(data: any) {
     try {
-      let text: string;
+      let decoded: any;
       if (data instanceof ArrayBuffer) {
-        text = new TextDecoder().decode(data);
+        decoded = msgpack.decode(new Uint8Array(data));
+      } else if (data instanceof Uint8Array) {
+        decoded = msgpack.decode(data);
       } else {
-        text = data;
+        decoded = JSON.parse(data);
       }
-      const packet: ServerPacket = JSON.parse(text);
+      const packet = decoded as ServerPacket;
       console.log('[Client] Received packet:', packet.type, packet);
 
       switch (packet.type) {
@@ -211,14 +220,14 @@ export class GameClient {
 
   /**
    * 立即发送协议包。要求 WebSocket 已处于 OPEN 状态。
-   * 将 JSON 对象转为 Uint8Array 发送：与后端期望的 Binary 消息格式一致。
+   * 将对象用 MessagePack 编码为 Uint8Array 发送：与后端期望的 Binary 消息格式一致。
    *
    * @param packet - 要发送的客户端协议包
    */
   private sendPacketNow(packet: ClientPacket) {
     console.log('[Client] Sending packet:', packet.type, packet);
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      const encoded = new TextEncoder().encode(JSON.stringify(packet));
+      const encoded = msgpack.encode(packet);
       this.ws.send(encoded);
     }
   }

@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Packet definitions using Postcard serialization
+//! Packet definitions using MessagePack serialization
 //! 本模块定义了前后端通信的所有协议包结构。
-//! 原计划使用 Postcard 二进制序列化（见 Cargo.toml 依赖），但目前实际使用 serde_json。
+//! 使用 MessagePack 二进制序列化（`rmp-serde` crate）。
 //! 与前端 `src/network/types.ts` 保持语义一致。
 
 use serde::{Deserialize, Serialize};
@@ -29,9 +29,9 @@ pub const PROTOCOL_VERSION: u16 = 1;
 
 /**
  * 客户端发送的协议包枚举。
- * 使用 `#[serde(tag = "type")]` 实现 tagged union：序列化后的 JSON 会包含 "type" 字段，
+ * 使用 `#[serde(tag = "type")]` 实现 tagged union：序列化后的数据会包含 "type" 字段，
  * 便于前端 JavaScript 和 Rust 反序列化时快速识别包类型。
- * 这是 JSON 协议中处理多态类型的标准做法。
+ * 这是 serde 协议中处理多态类型的标准做法。
  * 与前端 `src/network/types.ts` 的 `ClientPacket` 接口对应。
  */
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -68,7 +68,7 @@ pub enum ClientPacket {
 /**
  * 按键状态结构体。
  * 与前端 `src/network/types.ts` 的 `KeyState` 接口对应。
- * 使用独立结构体而非位掩码：虽然位掩码更紧凑，但结构体在 JSON 中更自描述，
+ * 使用独立结构体而非位掩码：虽然位掩码更紧凑，但结构体在文本格式中更自描述，
  * 且当前玩家数少（最多 4 人），网络开销可忽略。
  */
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -86,7 +86,7 @@ pub struct KeyState {
     pub right: bool,
 
     /// 空格键是否被按下。
-    /// `#[serde(default)]` 表示如果 JSON 中缺少此字段，默认值为 false。
+    /// `#[serde(default)]` 表示如果反序列化数据中缺少此字段，默认值为 false。
     /// 这是向后兼容的设计：旧版客户端可能不发 fire 字段。
     #[serde(default)]
     pub fire: bool,

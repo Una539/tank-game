@@ -268,27 +268,6 @@ class Tank extends Container {
   }
 
   /**
-   * 更新子弹状态并清理失效子弹。本地模式下每帧调用。
-   * 倒序遍历（i--）：删除数组元素时不影响未遍历的索引，是数组删除的标准技巧。
-   * 与后端 `server/src/game/tank.rs` 的 `update_bullets` 方法逻辑一致。
-   *
-   * @param walls - 当前地图的所有墙壁线段
-   */
-  update(walls: WallSegment[]) {
-    for (let i = this.bullets.length - 1; i >= 0; i--) {
-      const b = this.bullets[i];
-      b.update(walls);
-
-      // 子弹失活 → 从场景和数组中移除
-      if (!b.active) {
-        b.parent?.removeChild(b);
-        b.destroy();
-        this.bullets.splice(i, 1);
-      }
-    }
-  }
-
-  /**
    * 检测给定坐标是否与墙壁碰撞。
    * 使用"点到线段距离"算法：计算坦克中心到每面墙的最短距离，小于 radius 则撞墙。
    * 为什么不用 AABB（轴对齐包围盒）：地图墙壁是任意线段，AABB 只适用于矩形碰撞。
@@ -325,7 +304,6 @@ class Tank extends Container {
    * @param walls - 当前地图的所有墙壁线段
    */
   updateWithCollision(walls: WallSegment[]) {
-    this.bullets.forEach((b) => b.update(walls));
     for (let i = this.bullets.length - 1; i >= 0; i--) {
       const b = this.bullets[i];
       b.update(walls);

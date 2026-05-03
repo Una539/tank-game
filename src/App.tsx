@@ -79,11 +79,21 @@ const App = () => {
    * 从 localStorage 读取之前保存的玩家名称（如果有），
    * 设置游戏模式为 multiplayer，切换到大厅场景，并连接 WebSocket 服务器。
    */
-  const handleMultiplayerStart = () => {
+  const handleMultiplayerStart = (serverUrl: string) => {
     const name = localStorage.getItem('tank_player_name') || 'Player';
     setPlayerName(name);
     setGameMode('multiplayer');
     setMode('lobby');
+
+    const url =
+      serverUrl ||
+      localStorage.getItem('tank_server_url') ||
+      'ws://localhost:8080';
+    if (serverUrl) {
+      localStorage.setItem('tank_server_url', serverUrl);
+    }
+
+    client().setServerUrl(url);
 
     // 异步连接服务器。catch 处理连接失败（如服务器未启动）。
     client()
@@ -91,7 +101,7 @@ const App = () => {
       .catch((e) => {
         console.error('Failed to connect to server:', e);
         alert(
-          'Failed to connect to server. Make sure the server is running on port 8080.'
+          `Failed to connect to server at ${url}. Make sure the server is running.`
         );
       });
   };

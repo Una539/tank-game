@@ -23,7 +23,7 @@ use tokio::sync::{broadcast, mpsc};
 use tokio_tungstenite::{accept_async, tungstenite::Message};
 use tracing::{error, info, warn};
 
-use tank_server::protocol::{ClientPacket, ServerPacket};
+use tank_server::protocol::{ClientPacket, Codec, ServerPacket};
 use tank_server::rooms::{run_game_loop, RoomManager};
 
 /**
@@ -124,11 +124,9 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: Arc<AppSt
         match msg {
             Ok(Message::Binary(data)) => {
                 info!("[Server] Received Binary data, {} bytes", data.len());
-                let text = String::from_utf8_lossy(&data);
-                info!("[Server] Raw text: {}", text);
 
-                // 解析客户端包。当前使用 JSON，与前端 `client.ts` 的 `JSON.stringify` + `TextEncoder` 对应。
-                let packet: Result<ClientPacket, _> = serde_json::from_slice(&data);
+                // 解析客户端包。使用 MessagePack 二进制序列化，与前端 `client.ts` 的 `msgpack.encode` 对应。
+                let packet = Codec::decode::<ClientPacket>(&data).ok_or("decode failed");
                 match packet {
                     // ----- Join：加入/创建房间 -----
                     Ok(ClientPacket::Join {
@@ -154,7 +152,7 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: Arc<AppSt
                                     state.room_manager.get_room_broadcast_rx(&room_id).await;
 
                                 // 发送 Welcome 包，告知客户端其 player_id
-                                let welcome_data = serde_json::to_vec(&ServerPacket::Welcome {
+                                let welcome_data = Codec::encode(&ServerPacket::Welcome {
                                     player_id: conn_state.player_id,
                                     server_tick: 0,
                                 })
@@ -166,7 +164,7 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: Arc<AppSt
                                 {
                                     let room_guard = room.lock().await;
                                     let all_players = room_guard.get_room_players();
-                                    let data = serde_json::to_vec(&ServerPacket::RoomUpdate {
+                                    let data = Codec::encode(&ServerPacket::RoomUpdate {
                                         players: all_players,
                                     })
                                     .unwrap();
@@ -193,7 +191,7 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: Arc<AppSt
                                 }
                             }
                             Err(e) => {
-                                let data = serde_json::to_vec(&ServerPacket::Error {
+                                let data = Codec::encode(&ServerPacket::Error {
                                     code: e,
                                     message: "Room error".to_string(),
                                 })
@@ -229,7 +227,7 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: Arc<AppSt
 
                     // ----- Ping：心跳/延迟测量 -----
                     Ok(ClientPacket::Ping { client_tick }) => {
-                        let data = serde_json::to_vec(&ServerPacket::Pong {
+                        let data = Codec::encode(&ServerPacket::Pong {
                             server_tick: client_tick,
                             latency_ms: 0,
                         })
@@ -274,10 +272,9 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: Arc<AppSt
                                                 p.name, p.ready, p.is_owner
                                             );
                                         }
-                                        let data = serde_json::to_vec(&ServerPacket::RoomUpdate {
-                                            players,
-                                        })
-                                        .unwrap();
+                                        let data =
+                                            Codec::encode(&ServerPacket::RoomUpdate { players })
+                                                .unwrap();
                                         let _ = room_guard.broadcast_tx.send(data);
 
                                         // 所有玩家准备就绪且游戏未开始：自动启动游戏
@@ -292,7 +289,7 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: Arc<AppSt
                                             );
 
                                             let game_start_data =
-                                                serde_json::to_vec(&ServerPacket::GameStart {
+                                                Codec::encode(&ServerPacket::GameStart {
                                                     seed,
                                                     map: map_data,
                                                     server_tick: 0,
@@ -313,7 +310,7 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: Arc<AppSt
                                 }
                                 Err(e) => {
                                     error!("[Server] Toggle ready error: {:?}", e);
-                                    let data = serde_json::to_vec(&ServerPacket::Error {
+                                    let data = Codec::encode(&ServerPacket::Error {
                                         code: e,
                                         message: "Failed to toggle ready".to_string(),
                                     })
@@ -338,8 +335,7 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: Arc<AppSt
                                 let room_guard = room.lock().await;
                                 let players = room_guard.get_room_players();
                                 let data =
-                                    serde_json::to_vec(&ServerPacket::RoomUpdate { players })
-                                        .unwrap();
+                                    Codec::encode(&ServerPacket::RoomUpdate { players }).unwrap();
                                 let _ = room_guard.broadcast_tx.send(data);
                             }
                             conn_state.room_id = None;
@@ -372,7 +368,7 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: Arc<AppSt
         if let Some(room) = state.room_manager.get_room_arc(&rid).await {
             let room_guard = room.lock().await;
             let players = room_guard.get_room_players();
-            let data = serde_json::to_vec(&ServerPacket::RoomUpdate { players }).unwrap();
+            let data = Codec::encode(&ServerPacket::RoomUpdate { players }).unwrap();
             let _ = room_guard.broadcast_tx.send(data);
         }
     }

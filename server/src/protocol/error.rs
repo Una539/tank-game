@@ -27,7 +27,7 @@
  */
 #[derive(Debug, Clone, Copy)]
 pub enum ErrorCode {
-    /// 包格式无效。JSON 解析失败或缺少必要字段时返回。
+    /// 包格式无效。MessagePack 解析失败或缺少必要字段时返回。
     InvalidPacket,
 
     /// 协议版本不匹配。预留用于未来协议升级。

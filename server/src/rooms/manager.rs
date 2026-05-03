@@ -28,6 +28,7 @@ use uuid::Uuid;
 
 use crate::game::{GameState, Map, WallType as GameWallType};
 use crate::networking::GameChannel;
+use crate::protocol::Codec;
 pub use crate::protocol::{
     BulletSnapshot, ErrorCode, ExplosionSnapshot, MapData, PlayerSnapshot, RoomPlayer,
     ServerPacket, WallSegment as PacketWallSegment, WallType,
@@ -287,7 +288,7 @@ pub async fn run_game_loop(room: Arc<Mutex<Room>>) {
                     explosions: game.get_explosion_snapshots(),
                 };
 
-                if let Ok(data) = serde_json::to_vec(&packet) {
+                if let Some(data) = Codec::encode(&packet) {
                     let _ = room.broadcast_tx.send(data);
                 }
 
@@ -296,7 +297,7 @@ pub async fn run_game_loop(room: Arc<Mutex<Room>>) {
                     let game_over_packet = ServerPacket::GameOver {
                         winner: game.winner,
                     };
-                    if let Ok(data) = serde_json::to_vec(&game_over_packet) {
+                    if let Some(data) = Codec::encode(&game_over_packet) {
                         let _ = room.broadcast_tx.send(data);
                     }
                     break;

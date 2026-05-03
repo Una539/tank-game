@@ -17,6 +17,7 @@ rand = "0.8"
 async-trait = "0.1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+rmp-serde = "1"
 
 [dev-dependencies]
 tokio-test = "0.4"

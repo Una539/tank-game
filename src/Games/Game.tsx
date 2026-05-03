@@ -328,6 +328,8 @@ const TankGame = (props: TankGameProps) => {
     app.ticker.add(() => {
       if (gameOver()) return;
 
+      const dt = app.ticker.deltaMS / 1000;
+
       const currentTime = performance.now();
 
       if (props.mode === 'local') {
@@ -411,15 +413,17 @@ const TankGame = (props: TankGameProps) => {
           // correctionSpeed = 0.15：每帧向服务器状态移动 15% 的差值。
           // 这是客户端预测的常见做法：完全覆盖会导致跳变（snapping），
           // 完全信任本地会累积误差。0.15 是经验和手感调优的结果。
-          const correctionSpeed = 0.15;
-          tank1.x += (serverPlayerState.x - tank1.x) * correctionSpeed;
-          tank1.y += (serverPlayerState.y - tank1.y) * correctionSpeed;
+          const correctionSpeedPerSecond = 9;
+
+          const factor = 1 - Math.exp(-correctionSpeedPerSecond * dt);
+          tank1.x += (serverPlayerState.x - tank1.x) * factor;
+          tank1.y += (serverPlayerState.y - tank1.y) * factor;
 
           // 角度差归一化到 [-π, π]，避免绕远路旋转
           let rotDiff = serverPlayerState.rotation - tank1.rotation;
           while (rotDiff > Math.PI) rotDiff -= 2 * Math.PI;
           while (rotDiff < -Math.PI) rotDiff += 2 * Math.PI;
-          tank1.rotation += rotDiff * correctionSpeed;
+          tank1.rotation += rotDiff * factor;
         }
       }
 
@@ -449,7 +453,6 @@ const TankGame = (props: TankGameProps) => {
         for (const tank of tanks) {
           if (!tank.isDead) tank.updateWithCollision(wallsData);
         }
-        tank1.updateWithCollision(wallsData);
       }
 
       wasSpacePressed = keys['Space'];

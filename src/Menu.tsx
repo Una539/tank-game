@@ -24,7 +24,7 @@ interface MenuProps {
   onLocalStart: () => void;
 
   /** 点击"Multiplayer"按钮的回调。App.tsx 中切换至多人游戏模式并连接服务器。 */
-  onMultiplayerStart: () => void;
+  onMultiplayerStart: (serverUrl: string) => void;
 }
 
 /**
@@ -45,6 +45,10 @@ const Menu = (props: MenuProps) => {
   /** 玩家输入的名称。SolidJS 的 createSignal 创建响应式状态。 */
   const [playerName, setPlayerName] = createSignal('');
 
+  const [serverUrl, setServerUrl] = createSignal(
+    localStorage.getItem('tank_server_url') || ''
+  );
+
   /**
    * 处理点击多人游戏按钮。
    * 验证名称非空后保存到 localStorage（便于下次自动填充），
@@ -53,7 +57,7 @@ const Menu = (props: MenuProps) => {
   const handleMultiplayer = () => {
     if (playerName().trim()) {
       localStorage.setItem('tank_player_name', playerName().trim());
-      props.onMultiplayerStart();
+      props.onMultiplayerStart(serverUrl().trim());
     }
   };
 
@@ -72,6 +76,13 @@ const Menu = (props: MenuProps) => {
             placeholder="Player Name"
             value={playerName()}
             onInput={(e) => setPlayerName(e.currentTarget.value)}
+            class="menu-input"
+          />
+          <input
+            type="text"
+            placeholder="Server (ws://host:port)"
+            value={serverUrl()}
+            onInput={(e) => setServerUrl(e.currentTarget.value)}
             class="menu-input"
           />
           <button class="menu-btn" onClick={handleMultiplayer}>
